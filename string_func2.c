@@ -20,7 +20,7 @@ void removecomment(char *str)
  * tokenize_string - set the value of an environment variable
  * @command: name of env variable to set the value
  * @commandarray: value to be set
- * @sep: if set to true, environment variable is overwri
+ * @sep: if set to true, environment variable is overwritten
  */
 void tokenize_string(char *command, char *commandarray[], char sep)
 {

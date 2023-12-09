@@ -38,7 +38,25 @@ typedef struct alias_obj
 
 void executeshell(int argc __attribute__((unused)), char *argv[], char *env[]);
 void shell_startup_script(void);
-void eval_execute_command_loop(char *argv[], char *env[]);
+void eval_execute_command_loop(int argc __attribute__((unused)), char *argv[] __attribute__((unused)), char *env[]);
+void displaycwd(void);
+char *getusercommand(void);
+void removecomment(char *str);
+void tokenize_string(char *command, char *commandarray[], char sep);
+void execute_user_command(char *myargv[], char *env[]);
+int handle_builtin_commands(char *commandarray[], char *env[]);
+
+int exit_command(char *commandarray[], char *env[] __attribute__((unused)));
+int env_command(char *commandarray[], char *env[]);
+int cd_command(char *commandarray[], char *env[]);
+int alias_command(char *commandarray[], char *env[] __attribute__((unused)));
+
+void displayaliases(alias_t aliases[]);
+void updatealiases(char *str, alias_t aliases[]);
+int get_alias_index(alias_t aliases[], char *name);
+void display_or_update_aliases(char *commandarray[], alias_t aliases[]);
+
+void shell_startup_script(void);
 void displaycwd(void);
 char *getusercommand(void);
 void removecomment(char *);
@@ -46,9 +64,7 @@ void tokenize_string(char *command, char *commandarray[], char sep);
 size_t _getline(char **str, size_t *n, FILE *stream);
 int handle_builtin_commands(char *commandarray[], char *env[]);
 int (*get_fun(char *commandarray[]))(char *commandarray[], char **);
-void execute_user_command(char *myprog, char *myargv[], char *env[]);
 void convert_to_argv(char *command, char *commandarray[]);
-char *resolve_path(char *, char *, char *);
 int isonlydigit(char *);
 int _str_len(const char *str);
 int _atoi(char *s);
@@ -70,14 +86,9 @@ int env_command(char *commandarray[] __attribute__((unused)), char *env[]);
 int cd_command(char *commandarray[], char *env[]);
 int alias_command(char *commandarray[], char *env[] __attribute__((unused)));
 
-void displayaliases(alias_t aliases[]);
-void updatealiases(char *str, alias_t aliases[]);
-
 void remove_quotes(char *commandarray[]);
 void remove_single_quotes(char *str);
 void delete_char_at_index(char *str, int index);
 int does_str_contain(char *, char);
-void display_or_update_aliases(char *commandarray[], alias_t aliases[]);
-int get_alias_index(alias_t aliases[], char *name);
 
 #endif /* SHELL_H */

@@ -1,128 +1,71 @@
 #include "shell.h"
 
 /**
- * convert_to_argv - takes a command string at tokenizes it,
- * storing each text delimited by space in commandarray
- * @command: string to get commandarray from
- * @commandarray: array of char ped by space character
- */
-
-void convert_to_argv(char *command, char *commandarray[])
-{
-	int i;
-	int count_ca = 0;
-	int pass_space = 1;
-	int pt = 0;
-
-	for (i = 0; command[i] != '\0'; i++)
-	{
-		if (command[i] == '\'' && pt == 0)
-			pt = 1;
-		else if (command[i] == '\'' && pt == 1)
-			pt = 0;
-
-		if (pass_space == 1 && command[i] != ' ')
-		{
-			commandarray[count_ca] = command + i;
-			count_ca++;
-			pass_space = 0;
-		}
-		else if (command[i] == ' ' && pass_space != 1 && pt == 0)
-		{
-			command[i] = '\0';
-			pass_space = 1;
-		}
-	}
-
-	commandarray[count_ca] = NULL;
-}
-
-/**
- * resolve_path - return the absolute path where a command can be found
- * @myprog: name of my shell
- * @progname: name of the command to execute
- * @pathvar: a pointer to the path environment variable
- * Return: nothing
- */
-
-char *resolve_path(char *myprog, char *progname, char *pathvar)
-{
-	struct stat sfile;
-	char *path;
-	char *fullpath;
-	char *copyofpathvar = malloc(100);
-
-	if (stat(progname, &sfile) != -1)
-	{
-		fullpath = malloc(100);
-		_strcpy(fullpath, progname);
-		return (fullpath);
-	}
-
-	_strcpy(copyofpathvar, pathvar);
-	path = strtok(copyofpathvar, ":");
-	while (path != NULL)
-	{
-		fullpath = malloc(100);
-		_strcpy(fullpath, path);
-		_strcat(fullpath, "/");
-		_strcat(fullpath, progname);
-		if (stat(fullpath, &sfile) != -1)
-			return (fullpath);
-		path = strtok(NULL, ":");
-		free(fullpath);
-	}
-
-	print_to_stderr(myprog);
-	print_to_stderr(": ");
-	perror("");
-	return (NULL);
-}
-
-/**
  * execute_user_command - forks a process and execute command
  * on the child process using execve
- * @myprog: name of my shell
  * @myargv: synthetic commandarray for the program to run
  * @env: environment variables
  */
-
-void execute_user_command(char *myprog, char *myargv[], char *env[])
+void execute_user_command(char *myargv[], char *env[])
 {
-	char *path_to_command;
-	int n;
+	pid_t child_pid;
+	int status;
 
-	path_to_command = resolve_path(myprog, myargv[0], _getenv("PATH", env));
-	if (path_to_command == NULL)
-		return;
-	if (fork() == 0)
+	child_pid = fork();
+
+	if (child_pid == -1)
 	{
-		execve(path_to_command, myargv, env);
+		perror("fork");
+	}
+	else if (child_pid == 0)
+	{
+		/* Child process */
+		if (execve(myargv[0], myargv, env) == -1)
+		{
+			perror("execve");
+			exit(EXIT_FAILURE);
+		}
 	}
 	else
 	{
-		free(path_to_command);
-		wait(&n);
+		/* Parent process */
+		if (waitpid(child_pid, &status, 0) == -1)
+		{
+			perror("waitpid");
+		}
 	}
 }
 
 /**
- * handle_builtin_commands - exectutes the shell commands
- * @commandarray: argument count
+ * handle_builtin_commands - executes the shell built-in commands
+ * @commandarray: array of command arguments
  * @env: environment variables
- * Return: Always 0;
+ * Return: 1 if the command is a built-in, 0 otherwise
  */
 int handle_builtin_commands(char *commandarray[], char *env[])
 {
-	int (*func)(char **, char **);
-
-	func = get_fun(commandarray);
-	if (func != NULL)
+	if (_strcmp(commandarray[0], "exit") == 0)
 	{
-		func(commandarray, env);
-		return (1);
+		exit_command(commandarray, env);
+		return 1;
 	}
-	return (0);
+	else if (_strcmp(commandarray[0], "env") == 0)
+	{
+		env_command(commandarray, env);
+		return 1;
+	}
+	else if (_strcmp(commandarray[0], "cd") == 0)
+	{
+		cd_command(commandarray, env);
+		return 1;
+	}
+	else if (_strcmp(commandarray[0], "alias") == 0)
+	{
+		alias_command(commandarray, env);
+		return 1;
+	}
+
+	return 0;
 }
 
 /**
@@ -146,4 +89,17 @@ char *getusercommand(void)
 		buf[numchar - 1] = '\0';
 
 	return (buf);
+}
+
+/**
+ * main - executes the shell commands
+ * @argc: argument count
+ * @argv: array of argument variables
+ * @env: environment variables
+ * Return: Always 0;
+ */
+int main(int argc, char *argv[], char *env[])
+{
+	executeshell(argc, argv, env);
+	return 0;
 }

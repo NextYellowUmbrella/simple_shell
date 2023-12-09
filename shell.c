@@ -1,30 +1,4 @@
 #include "shell.h"
-/**
- * main - executes the shell commands
- * @argc: argument count
- * @argv: array of argument variables
- * @env: environment variables
- * Return: Always 0;
- */
-int main(int argc, char *argv[], char *env[])
-{
-	executeshell(argc, argv, env);
-	return (0);
-}
-
-/**
- * executeshell - activates command execution loop
- * @argc: argument count
- * @argv: array of argument variables
- * @env: environment variables
- * Return: void;
- */
-
-void executeshell(int argc __attribute__((unused)), char *argv[], char *env[])
-{
-	shell_startup_script();
-	eval_execute_command_loop(argv, env);
-}
 
 /**
  * shell_startup_script - displays welcome message to screen
@@ -40,7 +14,7 @@ void shell_startup_script(void)
  * @argv: arguments passed to shell when it was opened
  * @env: environment variables of shell
  */
-void eval_execute_command_loop(char *argv[], char *env[])
+void eval_execute_command_loop(int argc __attribute__((unused)), char *argv[] __attribute__((unused)), char *env[])
 {
 	char *usercommand;
 	char *commandarray[10];
@@ -53,21 +27,42 @@ void eval_execute_command_loop(char *argv[], char *env[])
 		usercommand = getusercommand();
 		removecomment(usercommand);
 		i = 0;
+
 		if (*usercommand == '\0')
+		{
+			free(usercommand);
 			continue;
+		}
+
 		tokenize_string(usercommand, commandsep, ';');
+
 		while (commandsep[i] != NULL)
 		{
-			convert_to_argv(commandsep[i], commandarray);
-			/*replace_variables(commandarray);*/
+			tokenize_string(commandsep[i], commandarray, ' ');
+			remove_quotes(commandarray); /*Handle quotes*/
+
 			if (handle_builtin_commands(commandarray, env) == 1)
 			{
 				i++;
 				continue;
 			}
-			execute_user_command(argv[0], commandarray, env);
+
+			execute_user_command(commandarray, env);
 			i++;
 		}
+
 		free(usercommand);
 	}
+}
+
+/**
+ * executeshell - activates command execution loop
+ * @argc: argument count
+ * @env: environment variables
+ * Return: void;
+ */
+void executeshell(int argc __attribute__((unused)), char *argv[], char *env[])
+{
+	shell_startup_script();
+	eval_execute_command_loop(argc, argv, env);
 }
