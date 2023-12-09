@@ -56,6 +56,9 @@ int _setenv(const char *name, const char *value, int overwrite)
 {
 	int i;
 	extern char **environ;
+	int memsize = _str_len(value) + _str_len(name) + 2;
+	/*Add a new environment variable*/
+	char *new_env_var = malloc(memsize);
 
 	for (i = 0; environ[i] != NULL; i++)
 	{
@@ -73,9 +76,6 @@ int _setenv(const char *name, const char *value, int overwrite)
 		}
 	}
 
-	/*Add a new environment variable*/
-	int memsize = _str_len(value) + _str_len(name) + 2;
-	char *new_env_var = malloc(memsize);
 	if (new_env_var == NULL)
 	{
 		perror("malloc");
