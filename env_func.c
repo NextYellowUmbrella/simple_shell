@@ -55,9 +55,7 @@ char *_getenv(const char *name, char *env[])
 int _setenv(const char *name, const char *value, int overwrite)
 {
 	int i;
-	/*extern*/
-	char **environ = NULL;
-	int memsize;
+	extern char **environ;
 
 	for (i = 0; environ[i] != NULL; i++)
 	{
@@ -65,21 +63,41 @@ int _setenv(const char *name, const char *value, int overwrite)
 		{
 			if (overwrite)
 			{
-				memsize = _str_len(value) + _str_len(name) + 2;
-				environ[i] = malloc(memsize);
+				int memsize = _str_len(value) + _str_len(name) + 2;
+				environ[i] = realloc(environ[i], memsize);
 				_strcpy(environ[i], name);
 				_strcat(environ[i], "=");
 				_strcat(environ[i], value);
 			}
-			return (0);
+			return 0;
 		}
 	}
 
-	/*
-	 * add a new environment variable
-	 */
+	/*Add a new environment variable*/
+	int memsize = _str_len(value) + _str_len(name) + 2;
+	char *new_env_var = malloc(memsize);
+	if (new_env_var == NULL)
+	{
+		perror("malloc");
+		return -1;
+	}
+	_strcpy(new_env_var, name);
+	_strcat(new_env_var, "=");
+	_strcat(new_env_var, value);
 
-	return (0);
+	/*Reallocate the environ array*/
+	environ = realloc(environ, (i + 2) * sizeof(char *));
+	if (environ == NULL)
+	{
+		perror("realloc");
+		free(new_env_var);
+		return -1;
+	}
+
+	environ[i] = new_env_var;
+	environ[i + 1] = NULL;
+
+	return 0;
 }
 
 /**
@@ -89,23 +107,26 @@ int _setenv(const char *name, const char *value, int overwrite)
  */
 int _unsetenv(const char *name)
 {
-	/*extern*/
-	char **environ = NULL;
-	int i;
+	extern char **environ;
+	int i, j;
 
 	for (i = 0; environ[i] != NULL; i++)
 	{
 		if (comp_env_with_val(environ[i], name) == 0)
 		{
-			/*
-			 * delete from array
-			 */
-			for (; environ[i] != NULL; i++)
+			/*Free memory for the environment variable*/
+			free(environ[i]);
+
+			/*Shift remaining elements to fill the gap*/
+			for (j = i; environ[j] != NULL; j++)
 			{
-				environ[i] = environ[i + 1];
+				environ[j] = environ[j + 1];
 			}
-			return (0);
+
+			return 0;
 		}
 	}
-	return (0);
+
+	/*Variable not found, nothing to unset*/
+	return 0;
 }

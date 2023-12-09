@@ -28,7 +28,6 @@ void updatealiases(char *str, alias_t aliases[])
 {
 	int i;
 	int index;
-	/*command and replacement*/
 	char *cnr[3];
 	alias_t newalias;
 
@@ -52,7 +51,7 @@ void updatealiases(char *str, alias_t aliases[])
 		for (i = 0; aliases[i].command != NULL; i++)
 			;
 
-		aliases[i + 1] = aliases[i];
+		/*Fix the index when adding a new alias*/
 		aliases[i] = newalias;
 	}
 }

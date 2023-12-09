@@ -56,7 +56,7 @@ char *_strcpy(char *dest, const char *src);
 int _strcmp(char *s1, char *s2);
 char *_strcat(char *dest, const char *src);
 void *_realloc(void *ptr, unsigned int old_size, unsigned int new_size);
-char *_getrnv(const char *name);
+char *_getenv(const char *name, char *env[]);
 int comp_env_with_val(const char *env, const char *val);
 char *_getenv(const char *name, char *env[]);
 int _setenv(const char *name, const char *value, int overwrite);
