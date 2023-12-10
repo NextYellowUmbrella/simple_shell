@@ -8,7 +8,7 @@
  */
 int _atoi(char *s)
 {
-	int i, n, sign = 1, no_of_dash = 0;
+	int , , sign = 1, no_of_dash = 0;
 
 	/* skip any character that is not a number*/
 	for (i = 0; s[i] < '0' || s[i] > '9'; i++)
