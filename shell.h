@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/types.h>
 
 /**
  * struct b_cmd - Short description
@@ -90,5 +91,6 @@ void remove_quotes(char *commandarray[]);
 void remove_single_quotes(char *str);
 void delete_char_at_index(char *str, int index);
 int does_str_contain(char *, char);
+char *_get_full_path(const char *command, char *env[]);
 
 #endif /* SHELL_H */

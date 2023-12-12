@@ -51,8 +51,65 @@ void eval_execute_command_loop(int argc __attribute__((unused)), char *argv[] __
 			i++;
 		}
 
-		free(usercommand);
+		/*Pass the full path of the command to execute_user_command*/
+		char *full_path_command = _get_full_path(commandarray[0], env);
+		if (full_path_command != NULL)
+		{
+			commandarray[0] = full_path_command;
+			execute_user_command(commandarray, env);
+			free(full_path_command);
+		}
+		else
+		{
+			/*Handle error: command not found in PATH*/
+			fprintf(stderr, "Command not found: %s\n", commandarray[0]);
+		}
+
+		i++;
 	}
+
+	free(usercommand);
+}
+
+/**
+ * _get_full_path - gets the full path
+ * of the command from PATH
+ * @command: command argument passed to shell when it was opened
+ * @env: environment variables of shell
+ */
+char *_get_full_path(const char *command, char *env[])
+{
+	char *path = _getenv("PATH", env);
+	char *token, *full_path;
+
+	if (path == NULL)
+	{
+		return NULL;
+	}
+
+	token = strtok(path, ":");
+	while (token != NULL)
+	{
+		full_path = (char *)malloc(strlen(token) + strlen(command) + 2);
+		if (full_path == NULL)
+		{
+			perror("malloc");
+			exit(EXIT_FAILURE);
+		}
+		strcpy(full_path, token);
+		strcat(full_path, "/");
+		strcat(full_path, command);
+
+		if (access(full_path, X_OK) == 0)
+		{
+			return full_path;
+		}
+
+		free(full_path);
+		token = strtok(NULL, ":");
+	}
+
+	return NULL; /*Command not found in PATH*/
 }
 
 /**

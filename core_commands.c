@@ -11,6 +11,13 @@ void execute_user_command(char *myargv[], char *env[])
 	pid_t child_pid;
 	int status;
 
+	/*Check if the command exists in PATH*/
+	if (access(myargv[0], X_OK) == -1)
+	{
+		perror("Command not found");
+		return;
+	}
+
 	child_pid = fork();
 
 	if (child_pid == -1)
