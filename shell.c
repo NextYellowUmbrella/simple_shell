@@ -39,7 +39,7 @@ void eval_execute_command_loop(int argc __attribute__((unused)), char *argv[] __
 		while (commandsep[i] != NULL)
 		{
 			tokenize_string(commandsep[i], commandarray, ' ');
-			remove_quotes(commandarray); /*Handle quotes*/
+			remove_quotes(commandarray);
 
 			if (handle_builtin_commands(commandarray, env) == 1)
 			{
@@ -47,28 +47,25 @@ void eval_execute_command_loop(int argc __attribute__((unused)), char *argv[] __
 				continue;
 			}
 
-			execute_user_command(commandarray, env);
+			/*Pass the full path of the command to execute_user_command*/
+			char *full_path_command = _get_full_path(commandarray[0], env);
+			if (full_path_command != NULL)
+			{
+				commandarray[0] = full_path_command;
+				execute_user_command(commandarray, env);
+				free(full_path_command);
+			}
+			else
+			{
+				/*Handle error: command not found in PATH*/
+				fprintf(stderr, "Command not found: %s\n", commandarray[0]);
+			}
+
 			i++;
 		}
 
-		/*Pass the full path of the command to execute_user_command*/
-		char *full_path_command = _get_full_path(commandarray[0], env);
-		if (full_path_command != NULL)
-		{
-			commandarray[0] = full_path_command;
-			execute_user_command(commandarray, env);
-			free(full_path_command);
-		}
-		else
-		{
-			/*Handle error: command not found in PATH*/
-			fprintf(stderr, "Command not found: %s\n", commandarray[0]);
-		}
-
-		i++;
+		free(usercommand);
 	}
-
-	free(usercommand);
 }
 
 /**
@@ -102,13 +99,15 @@ char *_get_full_path(const char *command, char *env[])
 
 		if (access(full_path, X_OK) == 0)
 		{
+			free(path); /*Free the memory allocated for path*/
 			return full_path;
 		}
 
-		free(full_path);
+		free(full_path); /*Free the memory allocated for full_path*/
 		token = strtok(NULL, ":");
 	}
 
+	free(path);  /*Free the memory allocated for path*/
 	return NULL; /*Command not found in PATH*/
 }
 
