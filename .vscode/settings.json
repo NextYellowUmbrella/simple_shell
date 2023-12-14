@@ -2,6 +2,15 @@
 	"cSpell.words": [
 		"eputchar",
 		"eputs",
+		"erratoi",
+		"myalias",
+		"mycd",
+		"myenv",
+		"myexit",
+		"myhelp",
+		"myhistory",
+		"mysetenv",
+		"myunsetenv",
 		"numwords",
 		"strtow"
 	]
