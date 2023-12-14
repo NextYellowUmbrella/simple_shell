@@ -1,124 +1,44 @@
 #include "shell.h"
 
 /**
- * shell_startup_script - displays welcome message to screen
- * Return: void;
+ * main - entry point
+ * @ac: arg count
+ * @av: arg vector
+ *
+ * Return: 0 on success, 1 on error
  */
-void shell_startup_script(void)
+int main(int ac, char **av)
 {
-}
+	info_t info[] = { INFO_INIT };
+	int fd = 2;
 
-/**
- * eval_execute_command_loop - continuously asks
- * user for command and executes it
- * @argv: arguments passed to shell when it was opened
- * @env: environment variables of shell
- */
-void eval_execute_command_loop(int argc __attribute__((unused)), char *argv[] __attribute__((unused)), char *env[])
-{
-	char *usercommand;
-	char *commandarray[10];
-	char *commandsep[10];
-	int i;
+	asm ("mov %1, %0\n\t"
+		"add $3, %0"
+		: "=r" (fd)
+		: "r" (fd));
 
-	while (1)
+	if (ac == 2)
 	{
-		displaycwd();
-		usercommand = getusercommand();
-		removecomment(usercommand);
-		i = 0;
-
-		if (*usercommand == '\0')
+		fd = open(av[1], O_RDONLY);
+		if (fd == -1)
 		{
-			free(usercommand);
-			continue;
-		}
-
-		tokenize_string(usercommand, commandsep, ';');
-
-		while (commandsep[i] != NULL)
-		{
-			tokenize_string(commandsep[i], commandarray, ' ');
-			remove_quotes(commandarray);
-
-			if (handle_builtin_commands(commandarray, env) == 1)
+			if (errno == EACCES)
+				exit(126);
+			if (errno == ENOENT)
 			{
-				i++;
-				continue;
+				_eputs(av[0]);
+				_eputs(": 0: Can't open ");
+				_eputs(av[1]);
+				_eputchar('\n');
+				_eputchar(BUF_FLUSH);
+				exit(127);
 			}
-
-			/*Pass the full path of the command to execute_user_command*/
-			char *full_path_command = _get_full_path(commandarray[0], env);
-			if (full_path_command != NULL)
-			{
-				commandarray[0] = full_path_command;
-				execute_user_command(commandarray, env);
-				free(full_path_command);
-			}
-			else
-			{
-				/*Handle error: command not found in PATH*/
-				fprintf(stderr, "Command not found: %s\n", commandarray[0]);
-			}
-
-			i++;
+			return (EXIT_FAILURE);
 		}
-
-		free(usercommand);
+		info->readfd = fd;
 	}
-}
-
-/**
- * _get_full_path - gets the full path
- * of the command from PATH
- * @command: command argument passed to shell when it was opened
- * @env: environment variables of shell
- */
-char *_get_full_path(const char *command, char *env[])
-{
-	char *path = _getenv("PATH", env);
-	char *token, *full_path;
-
-	if (path == NULL)
-	{
-		return NULL;
-	}
-
-	token = strtok(path, ":");
-	while (token != NULL)
-	{
-		full_path = (char *)malloc(strlen(token) + strlen(command) + 2);
-		if (full_path == NULL)
-		{
-			perror("malloc");
-			exit(EXIT_FAILURE);
-		}
-		strcpy(full_path, token);
-		strcat(full_path, "/");
-		strcat(full_path, command);
-
-		if (access(full_path, X_OK) == 0)
-		{
-			free(path); /*Free the memory allocated for path*/
-			return full_path;
-		}
-
-		free(full_path); /*Free the memory allocated for full_path*/
-		token = strtok(NULL, ":");
-	}
-
-	free(path);  /*Free the memory allocated for path*/
-	return NULL; /*Command not found in PATH*/
-}
-
-/**
- * executeshell - activates command execution loop
- * @argc: argument count
- * @env: environment variables
- * Return: void;
- */
-void executeshell(int argc __attribute__((unused)), char *argv[], char *env[])
-{
-	shell_startup_script();
-	eval_execute_command_loop(argc, argv, env);
+	populate_env_list(info);
+	read_history(info);
+	hsh(info, av);
+	return (EXIT_SUCCESS);
 }
